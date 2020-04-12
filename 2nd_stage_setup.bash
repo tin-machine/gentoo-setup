@@ -10,18 +10,8 @@ emerge --config sys-libs/timezone-data
 
 emerge -v dev-vcs/git
 
-# curl -O http://10.10.254.200:8080/assets/gentoo/etc/portage/make.conf
-# mv make.conf /mnt/gentoo/etc/portage/make.conf
 rm -rf /etc/portage
 git clone https://github.com/tin-machine/gentoo-etc-portage.git /etc/portage
-
-echo "ja_JP.UTF-8 UTF-8" > /etc/locale.gen
-
-cat - << EOS >> ~/.bashrc
-export USE_CCACHE=1
-export CCACHE_DIR=~/.ccache
-# export set CC='ccache gcc'
-EOS
 
 # システムのプロファイルは17 systemd にする
 profile=$(eselect profile list |grep '17.0/systemd' | awk '{print $1}' | sed -e 's/\[//' -e 's/\]//')
@@ -30,7 +20,20 @@ eselect profile set ${profile}
 eselect_locale=$(eselect locale list |grep 'ja_JP.utf8' | awk '{print $1}' | sed -e 's/\[//' -e 's/\]//')
 eselect locale set ${eselect_locale}
 
-emerge -v gentoo-sources genkernel dev-util/ccache
+echo "ja_JP.UTF-8 UTF-8" > /etc/locale.gen
+
+etc-update --automode -5
+
+emerge -vDN @world
+
+cat - << EOS >> ~/.bashrc
+export USE_CCACHE=1
+export CCACHE_DIR=~/.ccache
+# export set CC='ccache gcc'
+EOS
+
+emerge -v gentoo-sources sys-kernel/genkernel-next sys-kernel/dracut dev-util/ccache
+
 emerge -v net-misc/dhcpcd net-misc/openssh tmux vim pciutils sudo metalog fcron mlocate grub
 LANG='C' useradd -m -G users,portage,wheel -s /bin/bash inoue
 echo 'add password'
