@@ -8,12 +8,19 @@ emerge --sync
 echo "Japan" > /etc/timezone
 emerge --config sys-libs/timezone-data
 
+emerge -v dev-vcs/git
+
+# curl -O http://10.10.254.200:8080/assets/gentoo/etc/portage/make.conf
+# mv make.conf /mnt/gentoo/etc/portage/make.conf
+rm -rf /etc/portage
+git clone https://github.com/tin-machine/gentoo-etc-portage.git /etc/portage
+
 echo "ja_JP.UTF-8 UTF-8" > /etc/locale.gen
 
 cat - << EOS >> ~/.bashrc
 export USE_CCACHE=1
 export CCACHE_DIR=~/.ccache
-export set CC='ccache gcc'
+# export set CC='ccache gcc'
 EOS
 
 emerge -v gentoo-sources genkernel dev-util/ccache
