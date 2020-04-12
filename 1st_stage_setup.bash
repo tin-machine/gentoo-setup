@@ -28,8 +28,6 @@ cd /mnt/gentoo
 
 links https://www.gentoo.org/downloads/mirrors/
 tar xvJpf stage3-*.tar.xz --xattrs
-curl -O http://10.10.254.200:8080/assets/gentoo/etc/portage/make.conf
-mv make.conf /mnt/gentoo/etc/portage/make.conf
 
 cp -L /etc/resolv.conf /mnt/gentoo/etc/
 
@@ -40,6 +38,6 @@ mount --rbind /dev /mnt/gentoo/dev/
 mount --make-rslave /mnt/gentoo/dev/
 
 cd /mnt/gentoo/root/
-curl -O http://10.10.254.200:8080/assets/gentoo/2nd_stage_setup.bash
+curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/2nd_stage_setup.bash
 
 chroot /mnt/gentoo /bin/bash
