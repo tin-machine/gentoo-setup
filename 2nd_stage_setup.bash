@@ -8,7 +8,13 @@ emerge --sync
 echo "Japan" > /etc/timezone
 emerge --config sys-libs/timezone-data
 
-emerge -v dev-vcs/git
+emerge -v dev-vcs/git dev-util/ccache
+
+cat - << EOS >> ~/.bashrc
+export USE_CCACHE=1
+export CCACHE_DIR=~/.ccache
+export CC='ccache gcc'
+EOS
 
 rm -rf /etc/portage
 git clone https://github.com/tin-machine/gentoo-etc-portage.git /etc/portage
@@ -24,15 +30,11 @@ echo "ja_JP.UTF-8 UTF-8" > /etc/locale.gen
 
 etc-update --automode -5
 
+echo 'GRUB_CMDLINE_LINUX="init=/usr/lib/systemd/systemd"' >> /etc/default/grub
+
 emerge -vDN @world
 
-cat - << EOS >> ~/.bashrc
-export USE_CCACHE=1
-export CCACHE_DIR=~/.ccache
-# export set CC='ccache gcc'
-EOS
-
-emerge -v gentoo-sources sys-kernel/genkernel-next sys-kernel/dracut dev-util/ccache
+emerge -v gentoo-sources sys-kernel/genkernel-next sys-kernel/dracut 
 
 emerge -v net-misc/dhcpcd net-misc/openssh tmux vim pciutils sudo metalog fcron mlocate grub
 LANG='C' useradd -m -G users,portage,wheel -s /bin/bash inoue
@@ -40,15 +42,18 @@ echo 'add password'
 LANG='C' passwd inoue
 
 eselect editor set 3
+. /etc/profile
 visudo
 
 cd /usr/src/linux
+sed -i -e 's/^#UDEV/UDEV/' /etc/genkernel.conf
+echo 'MAKEOPTS="-j9"' >> /etc/genkernel.conf
+curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/usr/src/linux/.config
 make menuconfig
-make -j6 && make modules_install && make install && genkernel --install initramfs && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
+make -j6 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
 
 e2label /dev/sda2 boot
 e2label /dev/sda4 root
-mkswap -L swap /dev/sda3
 
 swapoff /dev/sda3
 mkswap -L swap /dev/sda3
@@ -60,9 +65,21 @@ LABEL=root    /           ext4    noatime         0 1
 LABEL=swap    none        swap    sw              0 0
 EOS
 
-rc-update add sshd default
-rc-update add metalog default
-rc-update add fcron default
-crontab /etc/crontab
+# ネットワーク
+echo '[Match]
+Name=en*
+ 
+[Network]
+DHCP=yes' > /etc/systemd/network/50-dhcp.network
+systemctl enable systemd-networkd.service
+
+ln -snf /run/systemd/resolve/resolv.conf /etc/resolve.conf
+systemctl enable systemd-resolved.service
+
+systemctl enable sshd.service
+
+systemctl preset-all
+
+emerge -C sys-apps/sysvinit sys-apps/openrc
 
 date
