@@ -26,7 +26,8 @@ hwclock --systohc
 
 cd /mnt/gentoo
 
-links https://www.gentoo.org/downloads/mirrors/
+# links https://www.gentoo.org/downloads/mirrors/
+curl -O http://ftp.jaist.ac.jp/pub/Linux/Gentoo/releases/x86/autobuilds/current-stage3-i686/stage3-i686-20200211T214502Z.tar.xz
 tar xvJpf stage3-*.tar.xz --xattrs
 
 cp -L /etc/resolv.conf /mnt/gentoo/etc/
