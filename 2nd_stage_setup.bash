@@ -28,9 +28,9 @@ eselect locale set ${eselect_locale}
 
 echo "ja_JP.UTF-8 UTF-8" > /etc/locale.gen
 
-etc-update --automode -5
-
 echo 'GRUB_CMDLINE_LINUX="init=/usr/lib/systemd/systemd"' >> /etc/default/grub
+
+etc-update --automode -5
 
 emerge -vDN @world
 
