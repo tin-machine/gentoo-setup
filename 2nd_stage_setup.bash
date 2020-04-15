@@ -13,7 +13,7 @@ emerge -v dev-vcs/git dev-util/ccache
 cat - << EOS >> ~/.bashrc
 export USE_CCACHE=1
 export CCACHE_DIR=~/.ccache
-export CC='ccache gcc'
+# export CC='ccache gcc'
 EOS
 
 rm -rf /etc/portage
@@ -31,7 +31,7 @@ echo "ja_JP.UTF-8 UTF-8" > /etc/locale.gen
 echo 'GRUB_CMDLINE_LINUX="init=/usr/lib/systemd/systemd"' >> /etc/default/grub
 
 etc-update --automode -5
-
+echo 'sys-apps/dbus systemd' > /etc/portage/package.use/dbus
 emerge -vDN @world
 
 emerge -v gentoo-sources sys-kernel/genkernel-next sys-kernel/dracut 
