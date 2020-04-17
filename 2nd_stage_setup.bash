@@ -5,10 +5,18 @@ export PS1="(chroot) $PS1"
 emerge-webrsync
 emerge --sync
 
+LANG='C' useradd -m -G users,portage,wheel -s /bin/bash inoue
+echo 'add password'
+LANG='C' passwd inoue
+
+emerge -v gentoo-sources 
+curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/usr/src/linux/.config
+make menuconfig
+
 echo "Japan" > /etc/timezone
 emerge --config sys-libs/timezone-data
 
-emerge -v dev-vcs/git dev-util/ccache
+emerge -v dev-vcs/git dev-util/ccache sys-devel/distcc
 
 cat - << EOS >> ~/.bashrc
 export USE_CCACHE=1
@@ -34,23 +42,18 @@ etc-update --automode -5
 echo 'sys-apps/dbus systemd' > /etc/portage/package.use/dbus
 emerge -vDN @world
 
-emerge -v gentoo-sources sys-kernel/genkernel-next sys-kernel/dracut 
+emerge -v net-misc/dhcpcd net-misc/openssh tmux vim pciutils sudo metalog fcron mlocate grub sys-kernel/genkernel-next sys-kernel/dracut 
 
-emerge -v net-misc/dhcpcd net-misc/openssh tmux vim pciutils sudo metalog fcron mlocate grub
-LANG='C' useradd -m -G users,portage,wheel -s /bin/bash inoue
-echo 'add password'
-LANG='C' passwd inoue
+make -j6 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
 
 eselect editor set 3
 . /etc/profile
-visudo
+
+echo '%wheel ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
 cd /usr/src/linux
 sed -i -e 's/^#UDEV/UDEV/' /etc/genkernel.conf
 echo 'MAKEOPTS="-j9"' >> /etc/genkernel.conf
-curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/usr/src/linux/.config
-make menuconfig
-make -j6 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
 
 e2label /dev/sda2 boot
 e2label /dev/sda4 root
@@ -71,6 +74,7 @@ Name=en*
  
 [Network]
 DHCP=yes' > /etc/systemd/network/50-dhcp.network
+
 systemctl enable systemd-networkd.service
 
 ln -snf /run/systemd/resolve/resolv.conf /etc/resolve.conf
