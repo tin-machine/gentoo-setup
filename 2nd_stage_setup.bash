@@ -5,7 +5,7 @@ export PS1="(chroot) $PS1"
 emerge-webrsync
 emerge --sync
 
-MAKEOPTS="-j8" emerge -v gentoo-sources 
+MAKEOPTS="-j9" emerge -v gentoo-sources 
 cd /usr/src/linux && curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/usr/src/linux/.config && make menuconfig
 
 LANG='C' useradd -m -G users,portage,wheel -s /bin/bash inoue
