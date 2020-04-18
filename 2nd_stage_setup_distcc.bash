@@ -18,7 +18,13 @@ cd /usr/src/linux && curl -O https://raw.githubusercontent.com/tin-machine/gento
 echo "Japan" > /etc/timezone
 emerge --config sys-libs/timezone-data
 
-MAKEOPTS="-j6"  emerge -v dev-vcs/git
+MAKEOPTS="-j6"  emerge -v dev-vcs/git dev-util/ccache sys-devel/distcc
+
+cat - << EOS >> ~/.bashrc
+export USE_CCACHE=1
+export CCACHE_DIR=~/.ccache
+# export CC='ccache gcc'
+EOS
 
 rm -rf /etc/portage
 git clone https://github.com/tin-machine/gentoo-etc-portage.git /etc/portage
@@ -40,9 +46,22 @@ emerge -vDN @world
 
 emerge -v net-misc/dhcpcd net-misc/openssh tmux vim pciutils sudo metalog fcron mlocate grub sys-kernel/genkernel-next sys-kernel/dracut 
 
-sed -i -e 's/^#UDEV/UDEV/' /etc/genkernel.conf
-echo 'MAKEOPTS="-j6"' >> /etc/genkernel.conf
-cd /usr/src/linux && make -j6 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
+cat - << EOS > /etc/portage/make.conf
+MAKEOPTS="-j20 -l3"
+FEATURES="distcc"
+EOS
+
+gcc_options=$(gcc -v -E -x c -march=native -mtune=native - < /dev/null 2>&1 | grep cc1 | perl -pe 's/^.* - //g;')
+sed -i -e "s/^CFLAGS.*/CFRAGS=\"-march=${gcc_options} \$\{COMMON_FLAGS\}\"/" /etc/portage/make.conf
+
+cat - << EOS > /etc/genkernel.conf
+UDEV="yes"
+MAKEOPTS="-j20"
+KERNEL_CC="ccache gcc"
+UTILS_CC="ccache gcc"
+EOS
+
+cd /usr/src/linux && CC='ccache gcc' make -j20 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
 
 eselect editor set 3
 . /etc/profile

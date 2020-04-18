@@ -13,8 +13,8 @@ mkswap /dev/sda3
 swapon /dev/sda3
 free -h
 
-mkfs.ext4 /dev/sda2
-mkfs.ext4 /dev/sda4
+mkfs.ext4 -F /dev/sda2
+mkfs.ext4 -F /dev/sda4
 
 mount /dev/sda4 /mnt/gentoo
 mkdir /mnt/gentoo/boot
@@ -41,6 +41,6 @@ mount --make-rslave /mnt/gentoo/dev/
 cd /mnt/gentoo/root/
 curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/2nd_stage_setup.bash
 
-rm stage3-*.tar.xz
+rm /mnt/gentoo/stage3-*.tar.xz
 
 chroot /mnt/gentoo /bin/bash
