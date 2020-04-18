@@ -8,6 +8,8 @@ emerge --sync
 MAKEOPTS="-j9" emerge -v gentoo-sources 
 cd /usr/src/linux && curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/usr/src/linux/.config && make menuconfig
 
+passwd root
+
 LANG='C' useradd -m -G users,portage,wheel -s /bin/bash inoue
 echo 'add user password'
 LANG='C' passwd inoue
@@ -45,9 +47,10 @@ emerge -v net-misc/dhcpcd net-misc/openssh tmux vim pciutils sudo metalog fcron 
 
 sed -i -e 's/^#UDEV/UDEV/' /etc/genkernel.conf
 echo 'MAKEOPTS="-j9"' >> /etc/genkernel.conf
-echo 'KERNEL_CC="ccache gcc"' >> /etc/genkernel.conf
-echo 'UTILS_CC="ccache gcc"' >> /etc/genkernel.conf
-cd /usr/src/linux && CC='ccache gcc' make -j6 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
+# echo 'KERNEL_CC="ccache gcc"' >> /etc/genkernel.conf
+# echo 'UTILS_CC="ccache gcc"' >> /etc/genkernel.conf
+# cd /usr/src/linux && CC='ccache gcc' make -j6 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
+cd /usr/src/linux && make -j6 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
 
 eselect editor set 3
 . /etc/profile
