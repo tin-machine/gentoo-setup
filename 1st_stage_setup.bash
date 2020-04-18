@@ -40,6 +40,7 @@ mount --make-rslave /mnt/gentoo/dev/
 
 cd /mnt/gentoo/root/
 curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/2nd_stage_setup.bash
+curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/2nd_stage_setup_distcc.bash
 
 rm /mnt/gentoo/stage3-*.tar.xz
 
