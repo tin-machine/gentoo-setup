@@ -1,5 +1,8 @@
 #!/bin/bash
 
+echo 'add root password'
+passwd root
+
 LANG='C' useradd -m -G users,portage,wheel -s /bin/bash inoue
 echo 'add user password'
 LANG='C' passwd inoue
@@ -9,21 +12,13 @@ export PS1="(chroot) $PS1"
 emerge-webrsync
 emerge --sync
 
-MAKEOPTS="-j9" emerge -v gentoo-sources 
+MAKEOPTS="-j6" emerge -v gentoo-sources 
 cd /usr/src/linux && curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/usr/src/linux/.config && make menuconfig
-
-passwd root
 
 echo "Japan" > /etc/timezone
 emerge --config sys-libs/timezone-data
 
-emerge -v dev-vcs/git dev-util/ccache sys-devel/distcc
-
-cat - << EOS >> ~/.bashrc
-export USE_CCACHE=1
-export CCACHE_DIR=~/.ccache
-# export CC='ccache gcc'
-EOS
+MAKEOPTS="-j6"  emerge -v dev-vcs/git
 
 rm -rf /etc/portage
 git clone https://github.com/tin-machine/gentoo-etc-portage.git /etc/portage
@@ -46,10 +41,7 @@ emerge -vDN @world
 emerge -v net-misc/dhcpcd net-misc/openssh tmux vim pciutils sudo metalog fcron mlocate grub sys-kernel/genkernel-next sys-kernel/dracut 
 
 sed -i -e 's/^#UDEV/UDEV/' /etc/genkernel.conf
-echo 'MAKEOPTS="-j9"' >> /etc/genkernel.conf
-# echo 'KERNEL_CC="ccache gcc"' >> /etc/genkernel.conf
-# echo 'UTILS_CC="ccache gcc"' >> /etc/genkernel.conf
-# cd /usr/src/linux && CC='ccache gcc' make -j6 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
+echo 'MAKEOPTS="-j6"' >> /etc/genkernel.conf
 cd /usr/src/linux && make -j6 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
 
 eselect editor set 3
