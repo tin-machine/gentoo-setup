@@ -1,5 +1,7 @@
 #!/bin/bash
 
+parted -s /dev/sda rm 2
+parted -s /dev/sda rm 4
 parted -s /dev/sda mklabel gpt
 parted -s /dev/sda mkpart grub 1 3
 parted -s /dev/sda set 1 bios_grub on
@@ -41,6 +43,6 @@ mount --make-rslave /mnt/gentoo/dev/
 cd /mnt/gentoo/root/
 curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/2nd_stage_setup.bash
 
-rm stage3-*.tar.xz
+rm /mnt/gentoo/stage3-*.tar.xz
 
 chroot /mnt/gentoo /bin/bash
