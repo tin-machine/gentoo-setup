@@ -5,13 +5,12 @@ export PS1="(chroot) $PS1"
 emerge-webrsync
 emerge --sync
 
-LANG='C' useradd -m -G users,portage,wheel -s /bin/bash inoue
-echo 'add password'
-LANG='C' passwd inoue
-
 emerge -v gentoo-sources 
-curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/usr/src/linux/.config
-make menuconfig
+cd /usr/src/linux && curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/usr/src/linux/.config && make menuconfig
+
+LANG='C' useradd -m -G users,portage,wheel -s /bin/bash inoue
+echo 'add user password'
+LANG='C' passwd inoue
 
 echo "Japan" > /etc/timezone
 emerge --config sys-libs/timezone-data
@@ -44,14 +43,13 @@ emerge -vDN @world
 
 emerge -v net-misc/dhcpcd net-misc/openssh tmux vim pciutils sudo metalog fcron mlocate grub sys-kernel/genkernel-next sys-kernel/dracut 
 
-make -j6 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
+cd /usr/src/linux && make -j6 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
 
 eselect editor set 3
 . /etc/profile
 
 echo '%wheel ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
-cd /usr/src/linux
 sed -i -e 's/^#UDEV/UDEV/' /etc/genkernel.conf
 echo 'MAKEOPTS="-j9"' >> /etc/genkernel.conf
 
