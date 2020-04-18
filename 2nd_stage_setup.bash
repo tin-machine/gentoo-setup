@@ -5,7 +5,7 @@ export PS1="(chroot) $PS1"
 emerge-webrsync
 emerge --sync
 
-emerge -v gentoo-sources 
+MAKEOPTS="-j9" emerge -v gentoo-sources 
 cd /usr/src/linux && curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/usr/src/linux/.config && make menuconfig
 
 LANG='C' useradd -m -G users,portage,wheel -s /bin/bash inoue
@@ -43,15 +43,16 @@ emerge -vDN @world
 
 emerge -v net-misc/dhcpcd net-misc/openssh tmux vim pciutils sudo metalog fcron mlocate grub sys-kernel/genkernel-next sys-kernel/dracut 
 
-cd /usr/src/linux && make -j6 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
+sed -i -e 's/^#UDEV/UDEV/' /etc/genkernel.conf
+echo 'MAKEOPTS="-j9"' >> /etc/genkernel.conf
+echo 'KERNEL_CC="ccache gcc"' >> /etc/genkernel.conf
+echo 'UTILS_CC="ccache gcc"' >> /etc/genkernel.conf
+cd /usr/src/linux && CC='ccache gcc' make -j6 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
 
 eselect editor set 3
 . /etc/profile
 
 echo '%wheel ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
-
-sed -i -e 's/^#UDEV/UDEV/' /etc/genkernel.conf
-echo 'MAKEOPTS="-j9"' >> /etc/genkernel.conf
 
 e2label /dev/sda2 boot
 e2label /dev/sda4 root
