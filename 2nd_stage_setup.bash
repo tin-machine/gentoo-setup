@@ -1,5 +1,9 @@
 #!/bin/bash
 
+LANG='C' useradd -m -G users,portage,wheel -s /bin/bash inoue
+echo 'add user password'
+LANG='C' passwd inoue
+
 source /etc/profile
 export PS1="(chroot) $PS1"
 emerge-webrsync
@@ -9,10 +13,6 @@ MAKEOPTS="-j9" emerge -v gentoo-sources
 cd /usr/src/linux && curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/usr/src/linux/.config && make menuconfig
 
 passwd root
-
-LANG='C' useradd -m -G users,portage,wheel -s /bin/bash inoue
-echo 'add user password'
-LANG='C' passwd inoue
 
 echo "Japan" > /etc/timezone
 emerge --config sys-libs/timezone-data
