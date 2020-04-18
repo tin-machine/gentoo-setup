@@ -13,7 +13,7 @@ emerge-webrsync
 emerge --sync
 
 MAKEOPTS="-j6" emerge -v gentoo-sources 
-cd /usr/src/linux && curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/usr/src/linux/.config && make menuconfig
+cd /usr/src/linux && curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/usr/src/linux/.config && make oldnoconfig && make menuconfig
 
 echo "Japan" > /etc/timezone
 emerge --config sys-libs/timezone-data
