@@ -13,7 +13,7 @@ emerge-webrsync
 emerge --sync
 
 MAKEOPTS="-j6" emerge -v gentoo-sources 
-cd /usr/src/linux && curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/usr/src/linux/.config && make oldnoconfig && make menuconfig
+cd /usr/src/linux && curl -O https://raw.githubusercontent.com/tin-machine/gentoo-setup/master/usr/src/linux/.config && make oldconfig && make menuconfig
 
 echo "Japan" > /etc/timezone
 emerge --config sys-libs/timezone-data
@@ -22,6 +22,9 @@ MAKEOPTS="-j6"  emerge -v dev-vcs/git sys-devel/distcc
 
 rm -rf /etc/portage
 git clone https://github.com/tin-machine/gentoo-etc-portage.git /etc/portage
+
+gcc_options=$(gcc -v -E -x c -march=native -mtune=native - < /dev/null 2>&1 | grep cc1 | perl -pe 's/^.* - //g;')
+sed -i -e "s/^CFLAGS.*/CFRAGS=\"-march=${gcc_options} \$\{COMMON_FLAGS\}\"/" /etc/portage/make.conf
 
 # システムのプロファイルは17 systemd にする
 profile=$(eselect profile list |grep '17.0/systemd' | awk '{print $1}' | sed -e 's/\[//' -e 's/\]//')
@@ -34,11 +37,16 @@ echo "ja_JP.UTF-8 UTF-8" > /etc/locale.gen
 
 echo 'GRUB_CMDLINE_LINUX="init=/usr/lib/systemd/systemd"' >> /etc/default/grub
 
+# emergeは distcc-config の内容を見てくれる
 distcc-config --set-hosts 10.10.254.16
 cat - << EOS >> /etc/portage/make.conf
 MAKEOPTS="-j20 -l4"
 FEATURES="distcc"
 EOS
+
+# distcc で分散コンパイルしたいため、gcc( binutils に含まれる )のバージョンを揃える
+eselect_binutils=$(eselect binutils list |grep '2.32' | awk '{print $1}' | sed -e 's/\[//' -e 's/\]//')
+eselect binutils set ${eselect_binutils}
 
 etc-update --automode -5
 echo 'sys-apps/dbus systemd' > /etc/portage/package.use/dbus
@@ -46,17 +54,18 @@ emerge -vDN @world
 
 emerge -v net-misc/dhcpcd net-misc/openssh tmux vim pciutils sudo metalog fcron mlocate grub sys-kernel/genkernel-next sys-kernel/dracut 
 
-gcc_options=$(gcc -v -E -x c -march=native -mtune=native - < /dev/null 2>&1 | grep cc1 | perl -pe 's/^.* - //g;')
-sed -i -e "s/^CFLAGS.*/CFRAGS=\"-march=${gcc_options} \$\{COMMON_FLAGS\}\"/" /etc/portage/make.conf
+# kernel での make では distcc-config の内容は見てくれず、 /etc/distcc/hosts と $PATH の内容を見ていた
+echo '10.10.254.16' > /etc/distcc/hosts
+export PATH="/usr/lib/ccache/bin:/usr/lib/distcc/bin:${PATH}"
 
 cat - << EOS >> /etc/genkernel.conf
 UDEV="yes"
 MAKEOPTS="-j20"
-KERNEL_CC="distcc gcc"
-UTILS_CC="distcc gcc"
+# KERNEL_CC="distcc gcc"  # $PATH に distcc が含まれる場合、不要
+# UTILS_CC="distcc gcc" # $PATH に distcc が含まれる場合、不要
 EOS
 
-cd /usr/src/linux && CC='distcc gcc' make -j20 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
+cd /usr/src/linux && make -j20 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
 
 eselect editor set 3
 . /etc/profile
@@ -87,10 +96,8 @@ systemctl enable systemd-networkd.service
 
 ln -snf /run/systemd/resolve/resolv.conf /etc/resolve.conf
 systemctl enable systemd-resolved.service
-
-systemctl enable sshd.service
-
 systemctl preset-all
+systemctl enable sshd.service
 
 emerge -C sys-apps/sysvinit sys-apps/openrc
 
