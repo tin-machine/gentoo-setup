@@ -18,13 +18,7 @@ cd /usr/src/linux && curl -O https://raw.githubusercontent.com/tin-machine/gento
 echo "Japan" > /etc/timezone
 emerge --config sys-libs/timezone-data
 
-MAKEOPTS="-j6"  emerge -v dev-vcs/git dev-util/ccache sys-devel/distcc
-
-cat - << EOS >> ~/.bashrc
-export USE_CCACHE=1
-export CCACHE_DIR=~/.ccache
-# export CC='ccache gcc'
-EOS
+MAKEOPTS="-j6"  emerge -v dev-vcs/git sys-devel/distcc
 
 rm -rf /etc/portage
 git clone https://github.com/tin-machine/gentoo-etc-portage.git /etc/portage
@@ -40,16 +34,17 @@ echo "ja_JP.UTF-8 UTF-8" > /etc/locale.gen
 
 echo 'GRUB_CMDLINE_LINUX="init=/usr/lib/systemd/systemd"' >> /etc/default/grub
 
+distcc-config --set-hosts 10.10.254.16
+cat - << EOS > /etc/portage/make.conf
+MAKEOPTS="-j20 -l4"
+FEATURES="distcc"
+EOS
+
 etc-update --automode -5
 echo 'sys-apps/dbus systemd' > /etc/portage/package.use/dbus
 emerge -vDN @world
 
 emerge -v net-misc/dhcpcd net-misc/openssh tmux vim pciutils sudo metalog fcron mlocate grub sys-kernel/genkernel-next sys-kernel/dracut 
-
-cat - << EOS > /etc/portage/make.conf
-MAKEOPTS="-j20 -l3"
-FEATURES="distcc"
-EOS
 
 gcc_options=$(gcc -v -E -x c -march=native -mtune=native - < /dev/null 2>&1 | grep cc1 | perl -pe 's/^.* - //g;')
 sed -i -e "s/^CFLAGS.*/CFRAGS=\"-march=${gcc_options} \$\{COMMON_FLAGS\}\"/" /etc/portage/make.conf
@@ -57,11 +52,11 @@ sed -i -e "s/^CFLAGS.*/CFRAGS=\"-march=${gcc_options} \$\{COMMON_FLAGS\}\"/" /et
 cat - << EOS > /etc/genkernel.conf
 UDEV="yes"
 MAKEOPTS="-j20"
-KERNEL_CC="ccache gcc"
-UTILS_CC="ccache gcc"
+KERNEL_CC="distcc gcc"
+UTILS_CC="distcc gcc"
 EOS
 
-cd /usr/src/linux && CC='ccache gcc' make -j20 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
+cd /usr/src/linux && CC='distcc gcc' make -j20 && make modules_install && make install && genkernel --install all && grub-install /dev/sda && grub-mkconfig -o /boot/grub/grub.cfg
 
 eselect editor set 3
 . /etc/profile
