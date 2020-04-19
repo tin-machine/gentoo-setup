@@ -35,7 +35,7 @@ echo "ja_JP.UTF-8 UTF-8" > /etc/locale.gen
 echo 'GRUB_CMDLINE_LINUX="init=/usr/lib/systemd/systemd"' >> /etc/default/grub
 
 distcc-config --set-hosts 10.10.254.16
-cat - << EOS > /etc/portage/make.conf
+cat - << EOS >> /etc/portage/make.conf
 MAKEOPTS="-j20 -l4"
 FEATURES="distcc"
 EOS
@@ -49,7 +49,7 @@ emerge -v net-misc/dhcpcd net-misc/openssh tmux vim pciutils sudo metalog fcron 
 gcc_options=$(gcc -v -E -x c -march=native -mtune=native - < /dev/null 2>&1 | grep cc1 | perl -pe 's/^.* - //g;')
 sed -i -e "s/^CFLAGS.*/CFRAGS=\"-march=${gcc_options} \$\{COMMON_FLAGS\}\"/" /etc/portage/make.conf
 
-cat - << EOS > /etc/genkernel.conf
+cat - << EOS >> /etc/genkernel.conf
 UDEV="yes"
 MAKEOPTS="-j20"
 KERNEL_CC="distcc gcc"
