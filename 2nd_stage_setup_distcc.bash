@@ -52,6 +52,7 @@ etc-update --automode -5
 echo 'sys-apps/dbus systemd' > /etc/portage/package.use/dbus
 emerge -vDN @world
 
+emerge -C sys-fs/eudev # eudev がインストールされ、systemdと衝突するので削除する
 emerge -v net-misc/dhcpcd net-misc/openssh tmux vim pciutils sudo metalog fcron mlocate grub sys-kernel/genkernel-next sys-kernel/dracut 
 
 # kernel での make では distcc-config の内容は見てくれず、 /etc/distcc/hosts と $PATH の内容を見ていた
